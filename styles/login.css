@@ -1,0 +1,13 @@
+/* Agregar estilos para el login */
+.login-wrapper {
+  text-align: center;
+  padding: 20px;
+}
+.form input {
+  margin: 10px 0;
+  padding: 10px;
+  width: 200px;
+}
+.error {
+  color: red;
+}
