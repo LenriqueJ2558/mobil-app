@@ -16,6 +16,7 @@ import {
 import styles from '../styles/loginStyles';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Login({ navigation }) {
   const [correo, setCorreo] = useState('');
@@ -36,13 +37,18 @@ export default function Login({ navigation }) {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://192.168.1.20:3003/api/auth/signin', {
+      const response = await axios.post('http://192.168.16.246:3003/api/auth/signin', {
         Correo: correo,
         Contraseña: contraseña,
       });
   
       const { accessToken, Nombre, TipoRol } = response.data;
-  
+      
+    await AsyncStorage.setItem('token', accessToken);
+    await AsyncStorage.setItem('nombre', Nombre);
+    await AsyncStorage.setItem('rol', TipoRol);
+
+      console.log('Token guardado:', accessToken);
       console.log('Token:', accessToken);
       console.log('Nombre:', Nombre);
       console.log('Rol:', TipoRol);
