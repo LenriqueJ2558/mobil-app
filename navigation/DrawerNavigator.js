@@ -6,6 +6,8 @@ import CustomDrawerContent from './CustomDrawerContent';
 import UserDetailsScreen from '../screens/UserDetailsScreen';
 import HojaIncidenciaScreen from '../screens/HojaIncidenciaScreen';
 
+import ReportesStack from './StackNavigator';
+
 const Drawer = createDrawerNavigator();
 
 export default function DrawerNavigator({ nombre, rol }) {
@@ -22,6 +24,7 @@ export default function DrawerNavigator({ nombre, rol }) {
       <Drawer.Screen name="Reportes" component={HomeScreen} />
       <Drawer.Screen name="DetallesUsuario" component={UserDetailsScreen} />
       <Drawer.Screen name="HojaIncidencia" component={HojaIncidenciaScreen} />
+      <Drawer.Screen name="MisReportes" component={ReportesStack} />
     </Drawer.Navigator>
   );
 }

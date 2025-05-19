@@ -5,12 +5,14 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { Video } from 'expo-av';  // ✅ Importamos Video de expo-av
+import { Video } from 'expo-av';
 import Icon from 'react-native-vector-icons/Ionicons';
-import axios from 'axios';  // Importamos axios
+import axios from 'axios';
 import styles from '../styles/HojaIncidenciaStyles';
 
-export default function HojaIncidenciaScreen() {
+export default function ActualizarIncidenciaScreen({ route, navigation }) {
+  const { incidenciaId } = route.params;
+
   const [nombreCliente, setNombreCliente] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [location, setLocation] = useState(null);
@@ -18,7 +20,8 @@ export default function HojaIncidenciaScreen() {
   const [video, setVideo] = useState(null);
 
   useEffect(() => {
-    getLocation();
+    
+    cargarDatosIncidencia();
   }, []);
 
   const getLocation = async () => {
@@ -29,6 +32,32 @@ export default function HojaIncidenciaScreen() {
     }
     const loc = await Location.getCurrentPositionAsync({});
     setLocation(loc.coords);
+  };
+
+  const cargarDatosIncidencia = async () => {
+    try {
+      const response = await axios.get(`http://192.168.16.246:3003/api/mobile/misnovedades/${incidenciaId}`);
+      const data = response.data;
+
+      setNombreCliente(data.nombre_cliente);
+      setDescripcion(data.descripcion);
+      setLocation({ latitude: parseFloat(data.latitud), longitude: parseFloat(data.longitud) });
+
+      // Construimos URLs completos para imagen y video según lo guardado en DB
+      const baseUrl = 'http://192.168.16.246:3003/api/uploads';
+
+      const photoUrl = data.foto ? `${baseUrl}/imagenesNovedades/${data.foto}` : null;
+      const videoUrl = data.video ? `${baseUrl}/videosNovedades/${data.video}` : null;
+
+      console.log('URL Foto:', photoUrl);
+      console.log('URL Video:', videoUrl);
+
+      setPhoto(photoUrl);
+      setVideo(videoUrl);
+    } catch (error) {
+      console.error('Error al cargar la incidencia:', error);
+      Alert.alert('Error', 'No se pudieron cargar los datos de la incidencia.');
+    }
   };
 
   const pickImage = async () => {
@@ -49,8 +78,7 @@ export default function HojaIncidenciaScreen() {
     if (!result.canceled) setVideo(result.assets[0].uri);
   };
 
-  const enviarNovedad = async () => {
-    // Verificamos que todos los campos estén completos
+  const actualizarNovedad = async () => {
     if (!nombreCliente || !descripcion || !location || !photo || !video) {
       Alert.alert('Error', 'Por favor complete todos los campos.');
       return;
@@ -62,32 +90,37 @@ export default function HojaIncidenciaScreen() {
     formData.append('latitud', location.latitude.toString());
     formData.append('longitud', location.longitude.toString());
 
-    // Enviar la foto
-    formData.append('foto', {
-      uri: photo,
-      type: 'image/png',  // Ajusta el tipo MIME según el tipo de archivo que estás enviando
-      name: photo.split('/').pop(),
-    });
+    if (photo && photo.startsWith('file://')) {
+      formData.append('foto', {
+        uri: photo,
+        type: 'image/png',
+        name: photo.split('/').pop(),
+      });
+    } else {
+      formData.append('foto_url', photo);
+    }
 
-    // Enviar el video
-    formData.append('video', {
-      uri: video,
-      type: 'video/mp4',  // Ajusta el tipo MIME según el tipo de archivo que estás enviando
-      name: video.split('/').pop(),
-    });
+    if (video && video.startsWith('file://')) {
+      formData.append('video', {
+        uri: video,
+        type: 'video/mp4',
+        name: video.split('/').pop(),
+      });
+    } else {
+      formData.append('video_url', video);
+    }
 
     try {
-      const response = await axios.post('http://192.168.16.246:3003/api/mobile/novedades', formData, {
+      const response = await axios.put(`http://192.168.16.246:3003/api/mobile/novedades/${incidenciaId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log(response.data);
-      Alert.alert('Novedad Enviada', 'Los datos se han registrado correctamente.');
-      limpiarCampos();
+      Alert.alert('Incidencia Actualizada', 'Los datos se han actualizado correctamente.');
+      navigation.goBack();
     } catch (error) {
-      console.error('Error al enviar la novedad:', error);
-      Alert.alert('Error', 'Hubo un problema al enviar la novedad.');
+      console.error('Error al actualizar la novedad:', error);
+      Alert.alert('Error', 'Hubo un problema al actualizar la novedad.');
     }
   };
 
@@ -97,12 +130,12 @@ export default function HojaIncidenciaScreen() {
     setLocation(null);
     setPhoto(null);
     setVideo(null);
-    getLocation(); // Obtener nueva ubicación
+    getLocation();
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Hoja de Incidencias</Text>
+      <Text style={styles.title}>Actualizar Incidencia</Text>
 
       <View style={styles.section}>
         <Text style={styles.label}>Ubicación GPS:</Text>
@@ -147,24 +180,31 @@ export default function HojaIncidenciaScreen() {
         {video && (
           <View style={styles.media}>
             <Video
-              source={{ uri: video }} // Aquí es donde reproducimos el video
-              rate={1.0}
-              volume={1.0}
-              isMuted={false}
-              resizeMode="contain"
-              shouldPlay
-              isLooping={false}
-              style={{ width: '100%', height: 200, marginTop: 10 }}
-              useNativeControls={true}  // Activamos los controles nativos del video
-            />
+  source={{ uri: video }}
+  rate={1.0}
+  volume={1.0}
+  isMuted={false}
+  resizeMode="contain"
+  shouldPlay={false}
+  isLooping={false}
+  style={{ width: '100%', height: 200, marginTop: 10 }}
+  useNativeControls={true}
+  onError={error => {
+    if (error && error.nativeEvent) {
+      console.log('Error en video:', error.nativeEvent.error);
+    } else {
+      console.log('Error en video:', error);
+    }
+  }}
+/>
           </View>
         )}
       </View>
 
       <View style={styles.buttonGroup}>
-        <TouchableOpacity style={styles.buttonSend} onPress={enviarNovedad}>
-          <Icon name="send" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Enviar</Text>
+        <TouchableOpacity style={styles.buttonSend} onPress={actualizarNovedad}>
+          <Icon name="save" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Actualizar</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.buttonClear} onPress={limpiarCampos}>
           <Icon name="refresh" size={20} color="#fff" />

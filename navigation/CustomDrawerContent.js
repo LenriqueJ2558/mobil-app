@@ -36,8 +36,12 @@ export default function CustomDrawerContent(props) {
 
         {/* ✅ Visible para todos */}
         <TouchableOpacity onPress={() => navigation.navigate('HojaIncidencia')}>
-  <Text style={styles.item}>Hoja de Incidencia</Text>
-</TouchableOpacity>
+          <Text style={styles.item}>Hoja de Incidencia</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('MisReportes')}>
+        <Text style={styles.item}>Mis Reportes</Text>
+        </TouchableOpacity>
+
       </View>
 
       {/* Menú inferior */}
