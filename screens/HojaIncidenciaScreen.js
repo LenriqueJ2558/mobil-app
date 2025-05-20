@@ -5,9 +5,9 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { Video } from 'expo-av';  // ✅ Importamos Video de expo-av
+import { Video } from 'expo-av';
 import Icon from 'react-native-vector-icons/Ionicons';
-import axios from 'axios';  // Importamos axios
+import axios from 'axios';
 import styles from '../styles/HojaIncidenciaStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -19,7 +19,20 @@ export default function HojaIncidenciaScreen() {
   const [video, setVideo] = useState(null);
 
   useEffect(() => {
-    getLocation();
+    const obtenerDatosIniciales = async () => {
+      try {
+        const nombreGuardado = await AsyncStorage.getItem('nombre');
+        if (nombreGuardado) {
+          setNombreCliente(nombreGuardado);
+        }
+      } catch (error) {
+        console.error('Error al obtener el nombre del usuario:', error);
+      }
+
+      getLocation();
+    };
+
+    obtenerDatosIniciales();
   }, []);
 
   const getLocation = async () => {
@@ -51,11 +64,10 @@ export default function HojaIncidenciaScreen() {
   };
 
   const enviarNovedad = async () => {
-    // Verificamos que todos los campos estén completos
     if (!nombreCliente || !descripcion || !location || !photo || !video) {
       Alert.alert('Error', 'Por favor complete todos los campos.');
       return;
-    } 
+    }
 
     const formData = new FormData();
     formData.append('nombre_cliente', nombreCliente);
@@ -63,33 +75,32 @@ export default function HojaIncidenciaScreen() {
     formData.append('latitud', location.latitude.toString());
     formData.append('longitud', location.longitude.toString());
 
-    // Enviar la foto
     formData.append('foto', {
       uri: photo,
-      type: 'image/png',  // Ajusta el tipo MIME según el tipo de archivo que estás enviando
+      type: 'image/png',
       name: photo.split('/').pop(),
     });
 
-    // Enviar el video
     formData.append('video', {
       uri: video,
-      type: 'video/mp4',  // Ajusta el tipo MIME según el tipo de archivo que estás enviando
+      type: 'video/mp4',
       name: video.split('/').pop(),
     });
+
     try {
-      const token = await AsyncStorage.getItem('token');  // Obtener el token guardado
+      const token = await AsyncStorage.getItem('token');
       if (!token) {
         Alert.alert('Error', 'No se encontró token de autenticación. Por favor inicie sesión.');
         return;
       }
-  
+
       const response = await axios.post('http://192.168.1.20:3003/api/mobile/novedades', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,  // Añadimos el token en la cabecera
+          Authorization: `Bearer ${token}`,
         },
       });
-  
+
       console.log(response.data);
       Alert.alert('Novedad Enviada', 'Los datos se han registrado correctamente.');
       limpiarCampos();
@@ -99,13 +110,14 @@ export default function HojaIncidenciaScreen() {
     }
   };
 
-  const limpiarCampos = () => {
-    setNombreCliente('');
+  const limpiarCampos = async () => {
+    const nombreGuardado = await AsyncStorage.getItem('nombre');
+    setNombreCliente(nombreGuardado || '');
     setDescripcion('');
     setLocation(null);
     setPhoto(null);
     setVideo(null);
-    getLocation(); // Obtener nueva ubicación
+    getLocation();
   };
 
   return (
@@ -122,12 +134,11 @@ export default function HojaIncidenciaScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.label}>Nombre del Cliente:</Text>
+        <Text style={styles.label}>Nombre del Serenazgo:</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: '#f0f0f0' }]}
           value={nombreCliente}
-          onChangeText={setNombreCliente}
-          placeholder="Ej: Juan Pérez"
+          editable={false}
         />
       </View>
 
@@ -155,7 +166,7 @@ export default function HojaIncidenciaScreen() {
         {video && (
           <View style={styles.media}>
             <Video
-              source={{ uri: video }} // Aquí es donde reproducimos el video
+              source={{ uri: video }}
               rate={1.0}
               volume={1.0}
               isMuted={false}
@@ -163,7 +174,7 @@ export default function HojaIncidenciaScreen() {
               shouldPlay
               isLooping={false}
               style={{ width: '100%', height: 200, marginTop: 10 }}
-              useNativeControls={true}  // Activamos los controles nativos del video
+              useNativeControls={true}
             />
           </View>
         )}

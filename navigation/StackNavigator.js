@@ -8,11 +8,15 @@ const Stack = createStackNavigator();
 export default function ReportesStack() {
   return (
     <Stack.Navigator initialRouteName="MisReportes">
-      <Stack.Screen name="MisReportes" component={MisReportesScreen} />
+      <Stack.Screen
+        name="MisReportes"
+        component={MisReportesScreen}
+        options={{ headerShown: false }} // 👈 Oculta el encabezado superior
+      />
       <Stack.Screen
         name="ActualizarIncidencia"
         component={ActualizarIncidenciaScreen}
-        options={{ title: 'Actualizar Incidencia' }}
+        options={{ title: '' }}
       />
     </Stack.Navigator>
   );
