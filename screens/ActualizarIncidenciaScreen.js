@@ -8,6 +8,7 @@ import * as Location from 'expo-location';
 import { Video } from 'expo-av';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../styles/HojaIncidenciaStyles';
 
 export default function ActualizarIncidenciaScreen({ route, navigation }) {
@@ -20,7 +21,6 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
   const [video, setVideo] = useState(null);
 
   useEffect(() => {
-    
     cargarDatosIncidencia();
   }, []);
 
@@ -36,21 +36,16 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
 
   const cargarDatosIncidencia = async () => {
     try {
-      const response = await axios.get(`http://192.168.1.20:3003/api/mobile/misnovedades/${incidenciaId}`);
+      const response = await axios.get(`http://192.168.16.246:3003/api/mobile/misnovedades/${incidenciaId}`);
       const data = response.data;
 
       setNombreCliente(data.nombre_cliente);
       setDescripcion(data.descripcion);
       setLocation({ latitude: parseFloat(data.latitud), longitude: parseFloat(data.longitud) });
 
-      // Construimos URLs completos para imagen y video según lo guardado en DB
-      const baseUrl = 'http://192.168.1.20:3003/api/uploads';
-
+      const baseUrl = 'http://192.168.16.246:3003/api/uploads';
       const photoUrl = data.foto ? `${baseUrl}/imagenesNovedades/${data.foto}` : null;
       const videoUrl = data.video ? `${baseUrl}/videosNovedades/${data.video}` : null;
-
-      console.log('URL Foto:', photoUrl);
-      console.log('URL Video:', videoUrl);
 
       setPhoto(photoUrl);
       setVideo(videoUrl);
@@ -79,10 +74,12 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
   };
 
   const actualizarNovedad = async () => {
-    if (!nombreCliente || !descripcion || !location || !photo || !video) {
-      Alert.alert('Error', 'Por favor complete todos los campos.');
+    if (!nombreCliente || !descripcion || !location) {
+      Alert.alert('Error', 'Por favor complete todos los campos obligatorios.');
       return;
     }
+
+    const token = await AsyncStorage.getItem('token'); // <-- recuperamos el token
 
     const formData = new FormData();
     formData.append('nombre_cliente', nombreCliente);
@@ -96,8 +93,6 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
         type: 'image/png',
         name: photo.split('/').pop(),
       });
-    } else {
-      formData.append('foto_url', photo);
     }
 
     if (video && video.startsWith('file://')) {
@@ -106,20 +101,23 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
         type: 'video/mp4',
         name: video.split('/').pop(),
       });
-    } else {
-      formData.append('video_url', video);
     }
 
     try {
-      const response = await axios.put(`http://192.168.1.20:3003/api/mobile/novedades/${incidenciaId}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axios.put(
+        `http://192.168.16.246:3003/api/mobile/novedades/${incidenciaId}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`, // <-- token en la cabecera
+          },
+        }
+      );
       Alert.alert('Incidencia Actualizada', 'Los datos se han actualizado correctamente.');
       navigation.goBack();
     } catch (error) {
-      console.error('Error al actualizar la novedad:', error);
+      console.error('Error al actualizar la novedad:', error.response?.data || error.message);
       Alert.alert('Error', 'Hubo un problema al actualizar la novedad.');
     }
   };
@@ -144,6 +142,7 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
         ) : (
           <Text>Obteniendo ubicación...</Text>
         )}
+        <Button title="Actualizar ubicación" onPress={getLocation} />
       </View>
 
       <View style={styles.section}>
@@ -180,23 +179,23 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
         {video && (
           <View style={styles.media}>
             <Video
-  source={{ uri: video }}
-  rate={1.0}
-  volume={1.0}
-  isMuted={false}
-  resizeMode="contain"
-  shouldPlay={false}
-  isLooping={false}
-  style={{ width: '100%', height: 200, marginTop: 10 }}
-  useNativeControls={true}
-  onError={error => {
-    if (error && error.nativeEvent) {
-      console.log('Error en video:', error.nativeEvent.error);
-    } else {
-      console.log('Error en video:', error);
-    }
-  }}
-/>
+              source={{ uri: video }}
+              rate={1.0}
+              volume={1.0}
+              isMuted={false}
+              resizeMode="contain"
+              shouldPlay={false}
+              isLooping={false}
+              style={{ width: '100%', height: 200, marginTop: 10 }}
+              useNativeControls
+              onError={(error) => {
+                if (error && error.nativeEvent) {
+                  console.log('Error en video:', error.nativeEvent.error);
+                } else {
+                  console.log('Error en video:', error);
+                }
+              }}
+            />
           </View>
         )}
       </View>

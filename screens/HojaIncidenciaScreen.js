@@ -94,7 +94,7 @@ export default function HojaIncidenciaScreen() {
         return;
       }
 
-      const response = await axios.post('http://192.168.1.20:3003/api/mobile/novedades', formData, {
+      const response = await axios.post('http://192.168.16.246:3003/api/mobile/novedades', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,

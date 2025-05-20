@@ -76,7 +76,7 @@ export default function MisReportesScreen({ navigation }) {
     try {
       const token = await AsyncStorage.getItem('token');
 
-      const response = await axios.get('http://192.168.1.20:3003/api/mobile/misnovedades', {
+      const response = await axios.get('http://192.168.16.246:3003/api/mobile/misnovedades', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
