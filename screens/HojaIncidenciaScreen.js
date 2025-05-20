@@ -9,6 +9,7 @@ import { Video } from 'expo-av';  // ✅ Importamos Video de expo-av
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';  // Importamos axios
 import styles from '../styles/HojaIncidenciaStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HojaIncidenciaScreen() {
   const [nombreCliente, setNombreCliente] = useState('');
@@ -54,7 +55,7 @@ export default function HojaIncidenciaScreen() {
     if (!nombreCliente || !descripcion || !location || !photo || !video) {
       Alert.alert('Error', 'Por favor complete todos los campos.');
       return;
-    }
+    } 
 
     const formData = new FormData();
     formData.append('nombre_cliente', nombreCliente);
@@ -75,13 +76,20 @@ export default function HojaIncidenciaScreen() {
       type: 'video/mp4',  // Ajusta el tipo MIME según el tipo de archivo que estás enviando
       name: video.split('/').pop(),
     });
-
     try {
-      const response = await axios.post('http://192.168.16.246:3003/api/mobile/novedades', formData, {
+      const token = await AsyncStorage.getItem('token');  // Obtener el token guardado
+      if (!token) {
+        Alert.alert('Error', 'No se encontró token de autenticación. Por favor inicie sesión.');
+        return;
+      }
+  
+      const response = await axios.post('http://192.168.1.20:3003/api/mobile/novedades', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,  // Añadimos el token en la cabecera
         },
       });
+  
       console.log(response.data);
       Alert.alert('Novedad Enviada', 'Los datos se han registrado correctamente.');
       limpiarCampos();

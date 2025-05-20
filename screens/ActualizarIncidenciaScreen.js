@@ -36,7 +36,7 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
 
   const cargarDatosIncidencia = async () => {
     try {
-      const response = await axios.get(`http://192.168.16.246:3003/api/mobile/misnovedades/${incidenciaId}`);
+      const response = await axios.get(`http://192.168.1.20:3003/api/mobile/misnovedades/${incidenciaId}`);
       const data = response.data;
 
       setNombreCliente(data.nombre_cliente);
@@ -44,7 +44,7 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
       setLocation({ latitude: parseFloat(data.latitud), longitude: parseFloat(data.longitud) });
 
       // Construimos URLs completos para imagen y video según lo guardado en DB
-      const baseUrl = 'http://192.168.16.246:3003/api/uploads';
+      const baseUrl = 'http://192.168.1.20:3003/api/uploads';
 
       const photoUrl = data.foto ? `${baseUrl}/imagenesNovedades/${data.foto}` : null;
       const videoUrl = data.video ? `${baseUrl}/videosNovedades/${data.video}` : null;
@@ -111,7 +111,7 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
     }
 
     try {
-      const response = await axios.put(`http://192.168.16.246:3003/api/mobile/novedades/${incidenciaId}`, formData, {
+      const response = await axios.put(`http://192.168.1.20:3003/api/mobile/novedades/${incidenciaId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

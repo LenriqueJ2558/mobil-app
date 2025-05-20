@@ -18,7 +18,7 @@ export default function UserDetailsScreen() {
           return;
         }
 
-        const response = await fetch('http://192.168.16.246:3003/api/auth/user-details', {
+        const response = await fetch('http://192.168.1.20:3003/api/auth/user-details', {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -52,7 +52,7 @@ export default function UserDetailsScreen() {
         return;
       }
 
-      const response = await fetch('http://192.168.16.246:3003/api/auth/change-password', {
+      const response = await fetch('http://192.168.1.20:3003/api/auth/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
