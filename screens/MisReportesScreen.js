@@ -10,6 +10,7 @@ import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../styles/MisReportesScreen.styles';
+import API_BASE_URL from '../config/apiConfig';
 
 export default function MisReportesScreen({ navigation }) {
   const [agrupados, setAgrupados] = useState([]);
@@ -76,7 +77,7 @@ export default function MisReportesScreen({ navigation }) {
     try {
       const token = await AsyncStorage.getItem('token');
 
-      const response = await axios.get('http://192.168.16.246:3003/api/mobile/misnovedades', {
+      const response = await axios.get(`${API_BASE_URL}/api/mobile/misnovedades`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

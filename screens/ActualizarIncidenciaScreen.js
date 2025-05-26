@@ -10,6 +10,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../styles/HojaIncidenciaStyles';
+import API_BASE_URL from '../config/apiConfig';
 
 export default function ActualizarIncidenciaScreen({ route, navigation }) {
   const { incidenciaId } = route.params;
@@ -36,14 +37,14 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
 
   const cargarDatosIncidencia = async () => {
     try {
-      const response = await axios.get(`http://192.168.16.246:3003/api/mobile/misnovedades/${incidenciaId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/mobile/misnovedades/${incidenciaId}`);
       const data = response.data;
 
       setNombreCliente(data.nombre_cliente);
       setDescripcion(data.descripcion);
       setLocation({ latitude: parseFloat(data.latitud), longitude: parseFloat(data.longitud) });
 
-      const baseUrl = 'http://192.168.16.246:3003/api/uploads';
+      const baseUrl = `${API_BASE_URL}/api/uploads`;
       const photoUrl = data.foto ? `${baseUrl}/imagenesNovedades/${data.foto}` : null;
       const videoUrl = data.video ? `${baseUrl}/videosNovedades/${data.video}` : null;
 
@@ -105,7 +106,7 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
 
     try {
       const response = await axios.put(
-        `http://192.168.16.246:3003/api/mobile/novedades/${incidenciaId}`,
+        `${API_BASE_URL}/api/mobile/novedades/${incidenciaId}`,
         formData,
         {
           headers: {

@@ -10,6 +10,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import styles from '../styles/HojaIncidenciaStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import API_BASE_URL from '../config/apiConfig';
 
 export default function HojaIncidenciaScreen() {
   const [nombreCliente, setNombreCliente] = useState('');
@@ -94,7 +95,7 @@ export default function HojaIncidenciaScreen() {
         return;
       }
 
-      const response = await axios.post('http://192.168.16.246:3003/api/mobile/novedades', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/mobile/novedades`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,

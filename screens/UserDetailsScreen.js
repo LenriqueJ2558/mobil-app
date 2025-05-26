@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../styles/UserDetailsStyles';
+import API_BASE_URL from '../config/apiConfig';
 
 export default function UserDetailsScreen() {
   const [userData, setUserData] = useState({ nombre: '', correo: '' });
@@ -18,7 +19,7 @@ export default function UserDetailsScreen() {
           return;
         }
 
-        const response = await fetch('http://192.168.16.246:3003/api/auth/user-details', {
+        const response = await fetch(`${API_BASE_URL}/api/auth/user-details`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -52,7 +53,7 @@ export default function UserDetailsScreen() {
         return;
       }
 
-      const response = await fetch('http://192.168.16.246:3003/api/auth/change-password', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

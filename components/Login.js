@@ -17,6 +17,7 @@ import styles from '../styles/loginStyles';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import API_BASE_URL from '../config/apiConfig';
 
 export default function Login({ navigation }) {
   const [correo, setCorreo] = useState('');
@@ -37,7 +38,7 @@ export default function Login({ navigation }) {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://192.168.16.246:3003/api/auth/signin', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/signin`, {
         Correo: correo,
         Contraseña: contraseña,
       });
