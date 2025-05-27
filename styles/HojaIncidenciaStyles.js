@@ -82,4 +82,15 @@ export default StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  picker: {
+    backgroundColor: '#fff',        // fondo blanco
+    borderWidth: 1,                 // borde fino
+    borderColor: '#ccc',            // color borde gris claro
+    borderRadius: 8,                // bordes redondeados
+    paddingVertical: 10,            // espacio arriba y abajo
+    paddingHorizontal: 12,          // espacio lateral
+    fontSize: 16,
+    color: '#333',
+    //width: '100%',  // opcional, para que ocupe todo el ancho
+  },
 });
