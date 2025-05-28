@@ -11,6 +11,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from '../styles/HojaIncidenciaStyles';
 import API_BASE_URL from '../config/apiConfig';
+import { Picker } from '@react-native-picker/picker';
 
 export default function ActualizarIncidenciaScreen({ route, navigation }) {
   const { incidenciaId } = route.params;
@@ -20,6 +21,11 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
   const [location, setLocation] = useState(null);
   const [photo, setPhoto] = useState(null);
   const [video, setVideo] = useState(null);
+  const [generalNovedad, setGeneralNovedad] = useState('');
+  const [tipoNovedad, setTipoNovedad] = useState('');
+  const [subTipoNovedad, setSubTipoNovedad] = useState('');
+  const [base, setBase] = useState('');
+  const [codigo, setCodigo] = useState('');
 
   useEffect(() => {
     cargarDatosIncidencia();
@@ -43,7 +49,11 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
       setNombreCliente(data.nombre_cliente);
       setDescripcion(data.descripcion);
       setLocation({ latitude: parseFloat(data.latitud), longitude: parseFloat(data.longitud) });
-
+      setGeneralNovedad(data.GeneraldeNovedades);
+      setTipoNovedad(data.TipodeNovedades);
+      setSubTipoNovedad(data.SubTipoNovedades);
+      setBase(data.Base);
+      
       const baseUrl = `${API_BASE_URL}/api/uploads`;
       const photoUrl = data.foto ? `${baseUrl}/imagenesNovedades/${data.foto}` : null;
       const videoUrl = data.video ? `${baseUrl}/videosNovedades/${data.video}` : null;
@@ -75,7 +85,8 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
   };
 
   const actualizarNovedad = async () => {
-    if (!nombreCliente || !descripcion || !location) {
+     
+    if (!nombreCliente || !descripcion || !location || !generalNovedad || !tipoNovedad || !subTipoNovedad || !base ) {
       Alert.alert('Error', 'Por favor complete todos los campos obligatorios.');
       return;
     }
@@ -87,6 +98,10 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
     formData.append('descripcion', descripcion);
     formData.append('latitud', location.latitude.toString());
     formData.append('longitud', location.longitude.toString());
+    formData.append('GeneraldeNovedades', generalNovedad);
+    formData.append('TipodeNovedades', tipoNovedad);
+    formData.append('SubTipoNovedades', subTipoNovedad);
+    formData.append('Base', base);
 
     if (photo && photo.startsWith('file://')) {
       formData.append('foto', {
@@ -131,6 +146,35 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
     setVideo(null);
     getLocation();
   };
+  const buscarPorCodigo = async () => {
+    const codigoRegex = /^0\d{5}$/; // Comienza con 0 y tiene 6 dígitos en total
+  
+    if (!codigoRegex.test(codigo)) {
+      Alert.alert('Código inválido', 'El código debe tener 6 dígitos, comenzar con 0 y contener solo números.');
+      return;
+    }
+  
+    try {
+      const response = await axios.get(`http://192.168.1.20:3003/api/Incidencia/${codigo}`);
+      const data = response.data;
+  
+      console.log('Respuesta completa:', data);
+  
+      // Verifica si los campos esperados existen en la respuesta
+      if (!data || !data.GENERAL || !data.TIPO || !data.SUBTIPO) {
+        Alert.alert('No existe ese código', 'No se encontró ninguna incidencia con ese código.');
+        return;
+      }
+  
+      setGeneralNovedad(data.GENERAL || '');
+      setTipoNovedad(data.TIPO || '');
+      setSubTipoNovedad(data.SUBTIPO || '');
+  
+    } catch (error) {
+      console.error('Error al buscar el código:', error);
+      Alert.alert('Error', 'Hubo un problema al buscar el código.');
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -166,6 +210,76 @@ export default function ActualizarIncidenciaScreen({ route, navigation }) {
           onChangeText={setDescripcion}
           placeholder="Describe lo que ocurrió..."
         />
+      </View>
+       {/* Nuevos campos como texto */}
+      <View style={styles.section}>
+  <Text style={styles.label}>General de Novedades:</Text>
+  <TextInput
+    style={[styles.input, { backgroundColor: '#f0f0f0' }]}
+    value={generalNovedad}
+    editable={false}
+    placeholder="General de Novedad"
+  />
+</View>
+
+<View style={styles.section}>
+  <Text style={styles.label}>Tipo de Novedades:</Text>
+  <TextInput
+    style={[styles.input, { backgroundColor: '#f0f0f0' }]}
+    value={tipoNovedad}
+    editable={false}
+    placeholder="Tipo de Novedad"
+  />
+</View>
+
+<View style={styles.section}>
+  <Text style={styles.label}>Sub Tipo de Novedades:</Text>
+  <TextInput
+    style={[styles.input, { backgroundColor: '#f0f0f0' }]}
+    value={subTipoNovedad}
+    editable={false}
+    placeholder="Sub Tipo de Novedad"
+  />
+</View>
+
+      {/* Código con botón */}
+      <View style={[styles.section, { flexDirection: 'row', alignItems: 'center' }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.label}>Código:</Text>
+          <TextInput
+  style={styles.input}
+  value={codigo}
+  onChangeText={(text) => {
+    const soloNumeros = text.replace(/[^0-9]/g, '');
+    if (soloNumeros.length <= 6) setCodigo(soloNumeros);
+  }}
+  placeholder="Ej: 012345"
+  keyboardType="numeric"
+/>
+        </View>
+        <TouchableOpacity style={[styles.buttonSend, { marginLeft: 10, marginTop: 20 }]} onPress={buscarPorCodigo}>
+  <Icon name="search" size={20} color="#fff" />
+</TouchableOpacity>
+      </View>
+
+      {/* Base sigue siendo Picker */}
+      <View style={styles.section}>
+        <Text style={styles.label}>Base:</Text>
+        <Picker
+          selectedValue={base}
+          onValueChange={setBase}
+          style={styles.picker}
+        >
+          <Picker.Item label="Seleccione una opción..." value="" enabled={false} />
+          <Picker.Item label="Base Casco Urbano" value="Base Casco Urbano" />
+          <Picker.Item label="Base Huachipa" value="Base Huachipa" />
+          <Picker.Item label="Base Ñaña" value="Base Ñaña" />
+          <Picker.Item label="Base Carapongo" value="Base Carapongo" />
+          <Picker.Item label="Base Jicamarca" value="Base Jicamarca" />
+          <Picker.Item label="Base Campiña" value="Base Campiña" />
+          <Picker.Item label="Base Niveria" value="Base Niveria" />
+          <Picker.Item label="Base Cajamarquilla" value="Base Cajamarquilla" />
+        </Picker>
       </View>
 
       <View style={styles.section}>
